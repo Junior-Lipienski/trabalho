@@ -1,0 +1,62 @@
+# nginx-deployment.yaml
+
+# Este Deployment cria um pod com o container NGINX.
+# Ele utiliza a imagem "nginx-proxy" (criada via Dockerfile na pasta nginx).
+# O NGINX atuará como proxy reverso para o app Node.js (app-service).
+
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment              # Nome do deployment
+  labels:
+    app: nginx
+spec:
+  replicas: 1                         # Quantos pods NGINX serão criados
+  selector:
+    matchLabels:
+      app: nginx                      # Define o rótulo que será usado para identificar o pod
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+        - name: nginx
+          image: nginx-proxy          # Imagem criada localmente (Docker build)
+          imagePullPolicy: Never      #forçar imagem local
+          ports:
+            - containerPort: 80       # Porta padrão HTTP usada pelo NGINX
+          # Mapeia um volume onde ficará o arquivo default.conf
+          volumeMounts:
+            - name: nginx-config
+              mountPath: /etc/nginx/conf.d
+      # Cria o volume a partir do ConfigMap (será criado automaticamente pelo deployment)
+      volumes:
+        - name: nginx-config
+          configMap:
+            name: nginx-config
+---
+# ConfigMap com o conteúdo do default.conf
+# Esse bloco "injeta" o arquivo de configuração do NGINX dentro do container
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-config
+data:
+  default.conf: |
+    # ---------------------------------------------------------
+    # Configuração do proxy reverso NGINX.
+    # Redireciona requisições recebidas para o app-service (porta 3000).
+    # ---------------------------------------------------------
+    server {
+      listen 80;
+
+      location / {
+        proxy_pass http://app-service:3000;  # Encaminha o tráfego para o serviço do app Node.js
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+      }
+    }

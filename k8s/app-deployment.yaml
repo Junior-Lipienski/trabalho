@@ -1,0 +1,30 @@
+# app-deployment.yaml
+# Este Deployment cria o pod do app Node.js.
+# Ele roda a imagem "app-image" criada com o Dockerfile da pasta ./app
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app-deployment
+  labels:
+    app: app
+spec:
+  replicas: 1                 # Quantidade de pods do app
+  selector:
+    matchLabels:
+      app: app
+  template:
+    metadata:
+      labels:
+        app: app
+    spec:
+      containers:
+        - name: app
+          image: app-image     # Nome da imagem criada localmente
+          imagePullPolicy: Never   #forçar imagem local
+          ports:
+            - containerPort: 3000   # Porta que o servidor Node.js escuta
+          # Variáveis de ambiente opcionais (exemplo)
+          env:
+            - name: NODE_ENV
+              value: "production"

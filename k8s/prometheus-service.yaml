@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: prometheus-service
+spec:
+  type: NodePort
+  selector:
+    app: prometheus
+  ports:
+    - port: 9090
+      targetPort: 9090
+      nodePort: 30090
+# Este serviço expõe o Prometheus (porta 9090) para acesso externo no cluster Kubernetes,
+# usando o tipo NodePort, que disponibiliza a aplicação na porta 30090 de cada nó.

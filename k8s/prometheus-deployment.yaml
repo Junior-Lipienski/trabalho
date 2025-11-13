@@ -1,0 +1,49 @@
+
+# Deployment do Prometheus
+# Cria um pod rodando o container do Prometheus
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: prometheus-deployment
+spec:
+  replicas: 1                  # Número de pods do Prometheus
+  selector:
+    matchLabels:
+      app: prometheus
+  template:
+    metadata:
+      labels:
+        app: prometheus
+    spec:
+      containers:
+        - name: prometheus
+          image: prom/prometheus
+          ports:
+            - containerPort: 9090
+          # Monta o ConfigMap como volume para ler a configuração
+          volumeMounts:
+            - name: config-volume
+              mountPath: /etc/prometheus/
+      volumes:
+        - name: config-volume
+          configMap:
+            name: prometheus-config   # Nome do ConfigMap que vamos criar
+
+
+# ConfigMap do Prometheus
+# Armazena o arquivo prometheus.yml que define quais targets monitorar
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-config
+data:
+  prometheus.yml: |
+    global:
+      scrape_interval: 5s   # Intervalo de coleta de métricas
+    scrape_configs:
+      - job_name: "app"
+        static_configs:
+          - targets: ["app-service:3000"]   # Serviço Node.js a ser monitorado

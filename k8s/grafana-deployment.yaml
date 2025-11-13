@@ -1,0 +1,25 @@
+# Deployment do Grafana
+# Cria um pod rodando o Grafana
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grafana-deployment
+spec:
+  replicas: 1                   # Um único pod por enquanto
+  selector:
+    matchLabels:
+      app: grafana
+  template:
+    metadata:
+      labels:
+        app: grafana
+    spec:
+      containers:
+        - name: grafana
+          image: grafana/grafana:latest
+          ports:
+            - containerPort: 3000  # Porta padrão do Grafana
+          env:
+            - name: GF_SECURITY_ADMIN_PASSWORD
+              value: "admin"       # Senha do admin

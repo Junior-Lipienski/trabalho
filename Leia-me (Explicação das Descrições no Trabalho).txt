@@ -1,0 +1,18 @@
+A maioria dos arquivos possui uma descrição.
+
+Neste .txt, temos a descrição do package-lock:
+vvv
+Este arquivo é gerado automaticamente pelo Node.js e registra as versões exatas das bibliotecas instaladas no projeto,
+como Express, Body-Parser e CORS, possibilitando de que todos usem as mesmas dependências, mantendo o funcionamento do
+sistema igual em qualquer ambiente.
+
+Também temos a descrição do arquivo Package.json dentro da pasta "app":
+vvv
+Define o projeto Node.js e informa o nome, a versão e as dependências (Express, Body-Parser e CORS), também especifica
+o comando para iniciar o servidor (node server.js).
+
+Também temos a descrição dos arquivos do node_modules:
+vvv
+É criada automaticamente pelo Node.js ao instalar as dependências do projeto, ela contém todos os pacotes e bibliotecas
+necessárias para o funcionamento da aplicação, como Express, Body-Parser, CORS e suas dependências internas, essa pasta
+proporciona que o código tenha todos os módulos corretos disponíveis em qualquer ambiente onde o projeto for executado.

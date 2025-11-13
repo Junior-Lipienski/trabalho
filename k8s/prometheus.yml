@@ -1,0 +1,8 @@
+# Configuração global do Prometheus
+global:
+  scrape_interval: 5s  # Prometheus vai checar métricas a cada 5 segundos
+
+scrape_configs:
+  - job_name: "app"
+    static_configs:
+      - targets: ["host.docker.internal:3000"]  # Aponta para Node.js local a partir do container

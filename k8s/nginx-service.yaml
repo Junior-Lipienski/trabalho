@@ -1,0 +1,18 @@
+# nginx-service.yaml
+
+# Este Service expõe o NGINX fora do cluster.
+# Assim, o navegador pode acessar o app via NGINX.
+
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-service
+spec:
+  type: NodePort                 # Expõe o serviço via porta do nó do cluster
+  selector:
+    app: nginx
+  ports:
+    - port: 80                   # Porta interna do serviço (NGINX)
+      targetPort: 80             # Porta dentro do container
+      nodePort: 30080            # Porta externa acessível pelo host (Minikube IP)

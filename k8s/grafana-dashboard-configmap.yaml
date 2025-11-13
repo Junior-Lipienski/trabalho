@@ -1,0 +1,49 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboards
+  labels:
+    grafana_dashboard: "1"
+data:
+  dashboard-projeto.json: |
+    {
+      "annotations": {
+        "list": []
+      },
+      "panels": [
+        {
+          "type": "stat",
+          "title": "Total de Requisições HTTP (1m rate)",
+          "targets": [
+            {
+              "expr": "sum(rate(http_requests_total[1m]))",
+              "legendFormat": "",
+              "refId": "A"
+            }
+          ],
+          "gridPos": {"h": 6, "w": 12, "x": 0, "y": 0},
+          "id": 1
+        },
+        {
+          "type": "stat",
+          "title": "Usuários Online (Total)",
+          "targets": [
+            {
+              "expr": "users_online_total",
+              "legendFormat": "",
+              "refId": "B"
+            }
+          ],
+          "gridPos": {"h": 6, "w": 12, "x": 12, "y": 0},
+          "id": 2
+        }
+      ],
+      "schemaVersion": 36,
+      "title": "Dashboard do Projeto - Métricas",
+      "version": 2
+    }
+# Este ConfigMap define um dashboard personalizado do Grafana em formato JSON.
+# Painéis incluídos:
+# 1. Total de Requisições HTTP (1m rate), mostra o total de requisições por minuto.
+# 2. Usuários Online (Total), mostra o total acumulado de usuários online.
+# Este ConfigMap permite que o Grafana carregue automaticamente estes painéis ao iniciar.
