@@ -20,7 +20,7 @@ spec:
     spec:
       containers:
         - name: app
-          image: app-image     # Nome da imagem criada localmente
+          image: monitor     # Nome da imagem criada localmente
           imagePullPolicy: Never   #forçar imagem local
           ports:
             - containerPort: 3000   # Porta que o servidor Node.js escuta
