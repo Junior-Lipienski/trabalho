@@ -1,0 +1,72 @@
+name: CD - Deploy to Kubernetes
+
+on:
+  workflow_run:
+    workflows: ["CI - Build & Push Docker"]
+    types: [ "completed" ]
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: self-hosted
+    defaults:
+      run:
+        shell: 'C:\PROGRA~1\Git\bin\bash.exe -e {0}'
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set vars
+        id: vars
+        run: |
+          echo "IMAGE=renato04jr/monitor" >> $GITHUB_OUTPUT
+          FULL_SHA=${{ github.event.workflow_run.head_sha }}
+          echo "TAG_SHA=${FULL_SHA::7}" >> $GITHUB_OUTPUT
+          echo "NAMESPACE=${{ secrets.K8S_NAMESPACE || 'default' }}" >> $GITHUB_OUTPUT
+
+      - name: Setup kubectl
+        uses: azure/setup-kubectl@v4
+        with:
+          version: 'latest'
+
+      - name: Configure kubeconfig
+        id: set_config 
+        run: |
+          mkdir -p $HOME/.kube
+          CONFIG_FILE_PATH=$HOME/.kube/config
+          echo "${{ secrets.KUBE_CONFIG_DATA }}" | base64 -d > $CONFIG_FILE_PATH
+          
+          # Em vez de GITHUB_ENV, salvamos o caminho para os próximos passos
+          echo "CONFIG_PATH=$CONFIG_FILE_PATH" >> $GITHUB_OUTPUT
+
+      - name: Create namespace if not exists
+        run: |
+          # Força o kubectl a usar o config do passo anterior
+          kubectl --kubeconfig=${{ steps.set_config.outputs.CONFIG_PATH }} get ns ${{ steps.vars.outputs.NAMESPACE }} || \
+          kubectl --kubeconfig=${{ steps.set_config.outputs.CONFIG_PATH }} create ns ${{ steps.vars.outputs.NAMESPACE }}
+
+      - name: Apply base manifests (Service, Prometheus, Grafana, Nginx)
+        run: |
+          kubectl --kubeconfig=${{ steps.set_config.outputs.CONFIG_PATH }} apply -n ${{ steps.vars.outputs.NAMESPACE }} -f k8s/service.yaml || true
+          kubectl --kubeconfig=${{ steps.set_config.outputs.CONFIG_PATH }} apply -n ${{ steps.vars.outputs.NAMESPACE }} -f k8s/prometheus-deployment.yaml || true
+          kubectl --kubeconfig=${{ steps.set_config.outputs.CONFIG_PATH }} apply -n ${{ steps.vars.outputs.NAMESPACE }} -f k8s/grafana-deployment.yaml || true
+          kubectl --kubeconfig=${{ steps.set_config.outputs.CONFIG_PATH }} apply -n ${{ steps.vars.outputs.NAMESPACE }} -f k8s/nginx-deployment.yaml || true
+          kubectl --kubeconfig=${{ steps.set_config.outputs.CONFIG_PATH }} apply -n ${{ steps.vars.outputs.NAMESPACE }} -f k8s/nginx-service.yaml || true
+          kubectl --kubeconfig=${{ steps.set_config.outputs.CONFIG_PATH }} apply -n ${{ steps.vars.outputs.NAMESPACE }} -f k8s/prometheus-config.yaml || true
+      
+      - name: Apply app deployment (first time)
+        run: |
+          kubectl --kubeconfig=${{ steps.set_config.outputs.CONFIG_PATH }} apply -n ${{ steps.vars.outputs.NAMESPACE }} -f k8s/deployment.yaml
+
+      - name: Set image to new tag
+        run: |
+          kubectl --kubeconfig=${{ steps.set_config.outputs.CONFIG_PATH }} set image deployment/monitor monitor=${{ steps.vars.outputs.IMAGE }}:${{ steps.vars.outputs.TAG_SHA }} -n ${{ steps.vars.outputs.NAMESPACE }}
+
+      - name: Wait rollout
+        run: |
+          kubectl --kubeconfig=${{ steps.set_config.outputs.CONFIG_PATH }} rollout status deployment/monitor -n ${{ steps.vars.outputs.NAMESPACE }} --timeout=120s
+
