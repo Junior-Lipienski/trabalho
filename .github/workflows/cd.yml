@@ -51,7 +51,7 @@ jobs:
 
       - name: Apply base manifests (Service, Prometheus, Grafana, Nginx)
         run: |
-          kubectl --kubeconfig=${{ steps.set_config.outputs.CONFIG_PATH }} apply -n ${{ steps.vars.outputs.NAMESPACE }} -f k8s/service.yaml || true
+          kubectl --kubeconfig=${{ steps.set_config.outputs.CONFIG_PATH }} apply -n ${{ steps.vars.outputs.NAMESPACE }} -f k8s/app-service.yaml || true
           kubectl --kubeconfig=${{ steps.set_config.outputs.CONFIG_PATH }} apply -n ${{ steps.vars.outputs.NAMESPACE }} -f k8s/prometheus-deployment.yaml || true
           kubectl --kubeconfig=${{ steps.set_config.outputs.CONFIG_PATH }} apply -n ${{ steps.vars.outputs.NAMESPACE }} -f k8s/grafana-deployment.yaml || true
           kubectl --kubeconfig=${{ steps.set_config.outputs.CONFIG_PATH }} apply -n ${{ steps.vars.outputs.NAMESPACE }} -f k8s/nginx-deployment.yaml || true
@@ -60,7 +60,7 @@ jobs:
       
       - name: Apply app deployment (first time)
         run: |
-          kubectl --kubeconfig=${{ steps.set_config.outputs.CONFIG_PATH }} apply -n ${{ steps.vars.outputs.NAMESPACE }} -f k8s/deployment.yaml
+          kubectl --kubeconfig=${{ steps.set_config.outputs.CONFIG_PATH }} apply -n ${{ steps.vars.outputs.NAMESPACE }} -f k8s/app-deployment.yaml
 
       - name: Set image to new tag
         run: |
